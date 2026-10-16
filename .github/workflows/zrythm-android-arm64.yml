@@ -87,6 +87,8 @@ jobs:
             -pr:b ci_clang_19 \
             -o "qt/*:android_sdk=$ANDROID_SDK_ROOT" \
             -c "tools.android:ndk_path=$ANDROID_NDK_HOME" \
+            -c:h "tools.system.package_manager:mode=disabled" \
+            -c:b "tools.system.package_manager:mode=disabled" \
             --lockfile="" \
             --build=missing
 
