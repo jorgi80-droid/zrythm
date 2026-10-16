@@ -7,6 +7,16 @@
 
 qt_add_executable(zrythm WIN32 MACOSX_BUNDLE)
 
+if(ANDROID)
+  # Qt's Android deploy step bundles the real Zrythm Qt/QML application.
+  set_target_properties(zrythm PROPERTIES
+    QT_ANDROID_PACKAGE_NAME "org.zrythm.mobile"
+    QT_ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_SOURCE_DIR}/data/platform/android"
+    QT_ANDROID_MIN_SDK_VERSION 28
+    QT_ANDROID_TARGET_SDK_VERSION 35
+  )
+endif()
+
 set(_build_datetime "")
 if(APPLE)
   execute_process(
