@@ -31,22 +31,23 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Set up Android SDK
+      - name: Install Android SDK packages
         uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platform-tools
+            platforms;android-35
+            build-tools;35.0.0
 
-      - name: Install Android platform and build tools
+      - name: Verify Android SDK
         shell: bash
         run: |
           set -euo pipefail
-          SDKMANAGER="$(find "$ANDROID_HOME" -type f -name sdkmanager -print -quit)"
-          if [ -z "$SDKMANAGER" ]; then
-            echo "::error::sdkmanager not found under ANDROID_HOME=$ANDROID_HOME"
-            find "$ANDROID_HOME" -maxdepth 4 -type d -print || true
-            exit 1
-          fi
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-          "$SDKMANAGER" --list_installed
+          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-unset}"
+          find "${ANDROID_HOME:-/usr/local/lib/android/sdk}" -maxdepth 5 -type f -name sdkmanager -print
+          ls -la "${ANDROID_HOME:-/usr/local/lib/android/sdk}/platforms/android-35"
+          ls -la "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0"
 
       - name: Build debug APK
         working-directory: android-prototype
