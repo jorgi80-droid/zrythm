@@ -31,21 +31,21 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Set up Android SDK
+      - name: Install Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install Android platform and build tools
         shell: bash
         run: |
           set -euo pipefail
-          SDKMANAGER="$(find /usr/local/lib/android/sdk -type f -name sdkmanager -print -quit)"
-          if [ -z "$SDKMANAGER" ]; then
-            echo "::error::sdkmanager not found in /usr/local/lib/android/sdk"
-            find /usr/local/lib/android/sdk -maxdepth 5 -print || true
+          SDKMANAGER="/usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found at expected Android SDK path"
+            find /usr/local/lib/android/sdk -maxdepth 5 -type f -name sdkmanager -print || true
             exit 1
           fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --install platform-tools "platforms;android-35" "build-tools;35.0.0"
+          "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
           "$SDKMANAGER" --list_installed
 
       - name: Build debug APK
