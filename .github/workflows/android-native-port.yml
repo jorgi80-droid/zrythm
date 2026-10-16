@@ -38,16 +38,17 @@ jobs:
           python3 -m venv .ci-venv
           . .ci-venv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install conan
-          conan profile detect --force
-          conan install . -pr:h default -pr:b default --build=missing -of conanbuild-ci
+          python -m pip install -r requirements.txt
+          conan config install conan
+          conan remote add conan-local-index ext/conan-center-index || true
+          python3 tools/export_conan_recipes.py
+          conan install . -pr:h clang_release -pr:b clang_release --build=missing
 
       - name: Configure native Linux reference build
         run: |
           cmake -S . -B build-mobile-check -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=clang-19 \
-            -DCMAKE_CXX_COMPILER=clang++-19 \
+
             -DZRYTHM_TESTS=OFF \
             -DZRYTHM_QML_TESTS=OFF \
             -DZRYTHM_BENCHMARKS=OFF \
