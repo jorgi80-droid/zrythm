@@ -8,6 +8,9 @@ on:
     paths:
       - 'conanfile.py'
       - 'conan/profiles/android_arm64'
+      - 'conan/profiles/ci_clang_19'
+      - 'conan/profiles/_common'
+      - 'conan/profiles/_qt_common'
       - '.github/workflows/zrythm-android-arm64.yml'
 
 permissions:
