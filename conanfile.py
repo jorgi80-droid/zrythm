@@ -40,7 +40,7 @@ class Zrythm(ConanFile):
         self.requires("spdlog/[~1.17]")
         self.requires("scnlib/4.0.1")
         self.requires("boost/[>=1.89.0]")
-        self.requires("nlohmann_json/3.12.1")
+        self.requires("nlohmann_json/3.12.1", override=True)
         self.requires("json-schema-validator/2.4.0")
         self.requires("libsndfile/1.2.2")
         self.requires("zstd/[~1.5]")
