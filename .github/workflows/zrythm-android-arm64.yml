@@ -1,0 +1,124 @@
+name: Build native Zrythm Android ARM64 APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - android-native-port
+    paths:
+      - 'CMakeLists.txt'
+      - 'conanfile.py'
+      - 'conan/**'
+      - 'src/**'
+      - 'data/platform/android/**'
+      - '.github/workflows/zrythm-android-arm64.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android-arm64:
+    name: Cross-build native Zrythm for Android ARM64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      QT_ANDROID_MIN_SDK_VERSION: '28'
+    steps:
+      - name: Checkout Zrythm source and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Java for Qt Android packaging
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Android SDK and NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platforms and NDK 28c
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/28.2.13676358" >> "$GITHUB_ENV"
+
+      - name: Install Linux build-host dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang-19 cmake ninja-build pkg-config flex gettext python3 python3-venv \
+            libasound2-dev libjack-jackd2-dev libx11-dev libx11-xcb-dev libxext-dev libxrandr-dev libxinerama-dev \
+            libxcursor-dev libxcomposite-dev libxrender-dev libxfixes-dev libxi-dev libxkbcommon-dev \
+            libfontconfig1-dev libfreetype-dev libgl1-mesa-dev libegl1-mesa-dev libpulse-dev libsndfile1-dev \
+            liblilv-dev libgtk-3-dev libdbus-1-dev libwayland-dev wayland-protocols libpipewire-0.3-dev
+
+      - name: Cache Conan and CPM sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.conan2
+            .cache/CPM
+          key: ${{ runner.os }}-zrythm-android-arm64-${{ hashFiles('conanfile.py', 'conan/profiles/**', 'requirements.txt', 'package-lock.cmake') }}
+          restore-keys: |
+            ${{ runner.os }}-zrythm-android-arm64-
+
+      - name: Install Python and Conan build tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m venv .ci-venv
+          source .ci-venv/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          conan config install conan
+          conan remote add conan-local-index ext/conan-center-index || true
+          python3 tools/export_conan_recipes.py
+          conan profile show -pr:h android_arm64 -pr:b ci_clang_19
+
+      - name: Resolve and cross-build dependencies for Android ARM64
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .ci-venv/bin/activate
+          conan install . \
+            -pr:h android_arm64 \
+            -pr:b ci_clang_19 \
+            -o "qt/*:android_sdk=$ANDROID_SDK_ROOT" \
+            --build=missing
+
+      - name: Configure native Qt/QML app for Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          source .ci-venv/bin/activate
+          cmake --preset default \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-28 \
+            -DZRYTHM_TESTS=OFF \
+            -DZRYTHM_QML_TESTS=OFF \
+            -DZRYTHM_BENCHMARKS=OFF \
+            -DZRYTHM_MANPAGE=OFF \
+            -DZRYTHM_SHELL_COMPLETIONS=OFF \
+            -DZRYTHM_USER_MANUAL=OFF \
+            -DZRYTHM_STRICT=OFF
+
+      - name: Build native APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build conanbuild/Release --parallel 2 --target apk
+          find conanbuild/Release -type f -name '*.apk' -print
+
+      - name: Upload native Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: zrythm-native-android-arm64-debug-apk
+          path: conanbuild/Release/**/*.apk
+          if-no-files-found: error
+          retention-days: 14
