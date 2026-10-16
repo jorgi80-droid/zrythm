@@ -85,7 +85,7 @@ class Zrythm(ConanFile):
         self.options["qt"].with_sqlite3 = False
         self.options["qt"].with_pq = False
         self.options["qt"].with_odbc = False
-        self.options["qt"].opengl = "es2" if self.settings.os == "Android" else "desktop"
+        self.options["qt"].opengl = "no" if self.settings.os == "Android" else "desktop"
 
         # Modules enabled in manual builds
         self.options["qt"].qtdeclarative = True
