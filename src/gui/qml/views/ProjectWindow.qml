@@ -472,7 +472,9 @@ ApplicationWindow {
     TapHandler {
       onTapped: {
         root.mobileWorkspaceOpen = true;
+        root.mobileTrackControlsOpen = false;
         root.appSettings.leftPanelVisible = true;
+        root.appSettings.rightPanelVisible = false;
       }
     }
   }
@@ -497,7 +499,9 @@ ApplicationWindow {
     TapHandler {
       onTapped: {
         root.mobileTrackControlsOpen = true;
+        root.mobileWorkspaceOpen = false;
         root.appSettings.rightPanelVisible = true;
+        root.appSettings.leftPanelVisible = false;
       }
     }
   }
