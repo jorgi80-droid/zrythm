@@ -31,5 +31,8 @@ qt/*:with_sqlite3=False
 qt/*:with_glib=False
 qt/*:qtcanvaspainter=True
 
+# Android cross-build must never install host desktop packages through Conan.
+# The runner provisions its host dependencies explicitly in the workflow.
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
+tools.system.package_manager:mode=disabled
