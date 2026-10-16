@@ -89,14 +89,16 @@ ApplicationWindow {
 
   // Android-friendly sizing: let the device determine the initial canvas size.
   // Keep desktop defaults while allowing compact phone layouts to expand fullscreen.
-  height: Math.max(480, Screen.height * 0.92)
+  height: Screen.height
   title: session.title
   visible: true
-  width: Math.max(800, Screen.width * 0.96)
+  width: Screen.width
 
   // Mobile mode adapts Zrythm's actual QML workspace rather than redrawing it.
   readonly property bool compactMobileLayout: Screen.width < 900 || Screen.height < 600
   property bool mobileWorkspaceOpen: false
+  property bool mobileLeftOverlayOpen: false
+  property bool mobileRightOverlayOpen: false
   property bool mobileTrackControlsOpen: false
 
   header: MainToolbar {
@@ -473,6 +475,8 @@ ApplicationWindow {
       onTapped: {
         root.mobileWorkspaceOpen = true;
         root.mobileTrackControlsOpen = false;
+        root.mobileLeftOverlayOpen = true;
+        root.mobileRightOverlayOpen = false;
         root.appSettings.leftPanelVisible = true;
         root.appSettings.rightPanelVisible = false;
       }
@@ -500,6 +504,8 @@ ApplicationWindow {
       onTapped: {
         root.mobileTrackControlsOpen = true;
         root.mobileWorkspaceOpen = false;
+        root.mobileLeftOverlayOpen = false;
+        root.mobileRightOverlayOpen = true;
         root.appSettings.rightPanelVisible = true;
         root.appSettings.leftPanelVisible = false;
       }
