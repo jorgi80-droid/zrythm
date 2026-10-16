@@ -26,19 +26,20 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK
+      - name: Install Android SDK command line tools
         uses: android-actions/setup-android@v3
-        with:
-          packages: 'platform-tools, platforms;android-35, build-tools;35.0.0'
-          accept-android-sdk-licenses: true
 
-      - name: Verify Android SDK
+      - name: Install Android platform and build tools
         shell: bash
         run: |
           set -euo pipefail
-          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
-          ls -la "${ANDROID_HOME:-/usr/local/lib/android/sdk}/platforms/android-35"
-          ls -la "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0"
+          SDKMANAGER="/usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install platform-tools
+          "$SDKMANAGER" --install "platforms;android-35"
+          "$SDKMANAGER" --install "build-tools;35.0.0"
+          test -d /usr/local/lib/android/sdk/platforms/android-35
+          test -d /usr/local/lib/android/sdk/build-tools/35.0.0
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
