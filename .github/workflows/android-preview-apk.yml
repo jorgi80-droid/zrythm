@@ -26,27 +26,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools, platforms;android-35, build-tools;35.0.0'
+          accept-android-sdk-licenses: true
+
+      - name: Verify Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "ANDROID_HOME=${ANDROID_HOME:-unset}"
+          ls -la "${ANDROID_HOME:-/usr/local/lib/android/sdk}/platforms/android-35"
+          ls -la "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0"
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
-
-      - name: Install Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android platform and build tools
-        shell: bash
-        run: |
-          set -euo pipefail
-          SDKMANAGER="/usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            echo "::error::sdkmanager not found at expected Android SDK path"
-            find /usr/local/lib/android/sdk -maxdepth 5 -type f -name sdkmanager -print || true
-            exit 1
-          fi
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-          "$SDKMANAGER" --list_installed
 
       - name: Build debug APK
         working-directory: android-prototype
