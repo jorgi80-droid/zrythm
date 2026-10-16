@@ -16,6 +16,9 @@ jobs:
   build-preview:
     name: Build landscape UI preview APK
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,44 +29,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # The setup action's default package list includes the removed "tools"
-      # package, so skip its implicit sdkmanager install step.
-      - name: Install Android command-line tools
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 'latest'
-          packages: ''
-          accept-android-sdk-licenses: true
-
-      - name: Install Android platform and build tools
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "SDK root: $ANDROID_HOME"
-          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print | sort -V | tail -n 1)"
-          if [ -z "$SDKMANAGER" ]; then
-            echo "::error::sdkmanager executable not found under $ANDROID_HOME/cmdline-tools"
-            find "$ANDROID_HOME" -maxdepth 5 -print || true
-            exit 1
-          fi
-          echo "Using $SDKMANAGER"
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --install "platform-tools"
-          "$SDKMANAGER" --install "platforms;android-35"
-          "$SDKMANAGER" --install "build-tools;35.0.0"
-
-      - name: Verify Android SDK packages
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -d "$ANDROID_HOME/platforms/android-35"
-          test -d "$ANDROID_HOME/build-tools/35.0.0"
-          echo "Android SDK packages verified"
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print -quit)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager not found under $ANDROID_HOME/cmdline-tools"
+            find "$ANDROID_HOME" -maxdepth 5 -print || true
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          "$SDKMANAGER" --list_installed
 
       - name: Build debug APK
         working-directory: android-prototype
