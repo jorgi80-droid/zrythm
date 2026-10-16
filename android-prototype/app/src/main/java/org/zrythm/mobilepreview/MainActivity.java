@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
+import android.widget.FrameLayout;
 import android.view.View;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
@@ -23,6 +24,12 @@ public class MainActivity extends Activity {
     private final int white = Color.rgb(237, 245, 239);
     private final int muted = Color.rgb(152, 167, 157);
     private LinearLayout tracks;
+    private LinearLayout navPanel;
+    private LinearLayout inspectorPanel;
+    private TextView leftPanelButton;
+    private TextView rightPanelButton;
+    private boolean workspaceOpen = false;
+    private boolean trackControlsOpen = false;
     private TextView playButton;
     private boolean playing = false;
     private String page = "Arrangement";
@@ -62,19 +69,64 @@ public class MainActivity extends Activity {
     private View buildRoot() {
         LinearLayout root = col(); root.setBackgroundColor(bg);
         root.addView(buildTopBar(), lp(-1, 58));
-        LinearLayout body = row(); root.addView(body, new LinearLayout.LayoutParams(-1, 0, 1));
-        body.addView(buildNav(), lp(136, -1));
-        LinearLayout center = col(); center.setPadding(dp(8), 0, dp(8), dp(6));
+
+        FrameLayout stage = new FrameLayout(this);
+        root.addView(stage, new LinearLayout.LayoutParams(-1, 0, 1));
+
+        LinearLayout body = row();
+        stage.addView(body, new FrameLayout.LayoutParams(-1, -1));
+
+        navPanel = (LinearLayout) buildNav();
+        navPanel.setVisibility(View.GONE);
+        body.addView(navPanel, lp(148, -1));
+
+        LinearLayout center = col();
+        center.setPadding(dp(8), 0, dp(8), dp(6));
         body.addView(center, new LinearLayout.LayoutParams(0, -1, 1));
         center.addView(buildHeading(), lp(-1, 44));
+
         ScrollView sc = new ScrollView(this); sc.setFillViewport(true);
         sc.setBackground(shape(Color.rgb(17,22,19), line));
         tracks = col(); pad(tracks, 8, 8, 8, 8); tracks.setGravity(Gravity.TOP);
         sc.addView(tracks); center.addView(sc, new LinearLayout.LayoutParams(-1, 0, 1));
         populateTracks();
         center.addView(buildTools(), lp(-1, 48));
-        body.addView(buildInspector(), lp(174, -1));
+
+        inspectorPanel = (LinearLayout) buildInspector();
+        inspectorPanel.setVisibility(View.GONE);
+        body.addView(inspectorPanel, lp(184, -1));
+
+        leftPanelButton = floatingPanelButton("☷", "Open workspace");
+        FrameLayout.LayoutParams leftParams = new FrameLayout.LayoutParams(dp(34), dp(48), Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        leftParams.leftMargin = dp(2);
+        stage.addView(leftPanelButton, leftParams);
+        leftPanelButton.setOnClickListener(v -> {
+            workspaceOpen = !workspaceOpen;
+            navPanel.setVisibility(workspaceOpen ? View.VISIBLE : View.GONE);
+            leftPanelButton.setText(workspaceOpen ? "‹" : "☷");
+            leftPanelButton.setContentDescription(workspaceOpen ? "Close workspace" : "Open workspace");
+        });
+
+        rightPanelButton = floatingPanelButton("☰", "Open track controls");
+        FrameLayout.LayoutParams rightParams = new FrameLayout.LayoutParams(dp(34), dp(48), Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        rightParams.rightMargin = dp(2);
+        stage.addView(rightPanelButton, rightParams);
+        rightPanelButton.setOnClickListener(v -> {
+            trackControlsOpen = !trackControlsOpen;
+            inspectorPanel.setVisibility(trackControlsOpen ? View.VISIBLE : View.GONE);
+            rightPanelButton.setText(trackControlsOpen ? "›" : "☰");
+            rightPanelButton.setContentDescription(trackControlsOpen ? "Close track controls" : "Open track controls");
+        });
+
         return root;
+    }
+
+    private TextView floatingPanelButton(String text, String description) {
+        TextView button = label(text, 18, green, true);
+        button.setGravity(Gravity.CENTER);
+        button.setContentDescription(description);
+        button.setBackground(shape(raised, line));
+        return button;
     }
 
     private View buildTopBar() {
