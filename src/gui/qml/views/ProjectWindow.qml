@@ -89,16 +89,13 @@ ApplicationWindow {
 
   // Android-friendly sizing: let the device determine the initial canvas size.
   // Keep desktop defaults while allowing compact phone layouts to expand fullscreen.
-  height: Screen.height
+  // Mobile uses the available screen; desktop keeps Zrythm's normal starting size.
+  readonly property bool compactMobileLayout: Screen.width < 900 || Screen.height < 600
+  height: compactMobileLayout ? Screen.height : 720
   title: session.title
   visible: true
-  width: Screen.width
-
-  // Mobile mode adapts Zrythm's actual QML workspace rather than redrawing it.
-  readonly property bool compactMobileLayout: Screen.width < 900 || Screen.height < 600
+  width: compactMobileLayout ? Screen.width : 1280
   property bool mobileWorkspaceOpen: false
-  property bool mobileLeftOverlayOpen: false
-  property bool mobileRightOverlayOpen: false
   property bool mobileTrackControlsOpen: false
 
   header: MainToolbar {
@@ -475,10 +472,8 @@ ApplicationWindow {
       onTapped: {
         root.mobileWorkspaceOpen = !root.mobileWorkspaceOpen;
         root.mobileTrackControlsOpen = false;
-        root.mobileLeftOverlayOpen = true;
-        root.mobileRightOverlayOpen = false;
-        root.appSettings.leftPanelVisible = true;
-        root.appSettings.rightPanelVisible = false;
+        root.appSettings.leftPanelVisible = false;
+        root.appSettings.rightPanelVisible = true;
       }
     }
   }
@@ -504,10 +499,8 @@ ApplicationWindow {
       onTapped: {
         root.mobileTrackControlsOpen = !root.mobileTrackControlsOpen;
         root.mobileWorkspaceOpen = false;
-        root.mobileLeftOverlayOpen = false;
-        root.mobileRightOverlayOpen = true;
-        root.appSettings.rightPanelVisible = true;
-        root.appSettings.leftPanelVisible = false;
+        root.appSettings.rightPanelVisible = false;
+        root.appSettings.leftPanelVisible = true;
       }
     }
   }
@@ -537,7 +530,23 @@ ApplicationWindow {
         trackSelectionModel: trackSelectionModel
         tracklist: root.project.tracklist
         undoStack: root.session.undoStack
-        visible: root.compactMobileLayout ? root.mobileWorkspaceOpen : root.appSettings.leftPanelVisible
+        visible: !root.compactMobileLayout && root.appSettings.leftPanelVisible
+      }
+
+      // The actual Zrythm browser dock sits to the left on mobile.
+      Loader {
+        id: mobileWorkspaceDock
+        visible: root.compactMobileLayout && root.mobileWorkspaceOpen
+        active: visible
+        SplitView.fillHeight: true
+        SplitView.minimumWidth: visible ? 170 : 0
+        SplitView.preferredWidth: visible ? 210 : 0
+        sourceComponent: Component {
+          RightDock {
+            pluginImporter: root.session.pluginImporter
+            project: root.project
+          }
+        }
       }
 
       SplitView {
@@ -568,7 +577,7 @@ ApplicationWindow {
           chordPresetManager: root.chordPresetManager
           session: root.session
           trackSelectionModel: trackSelectionModel
-          visible: root.appSettings.bottomPanelVisible
+          visible: root.compactMobileLayout ? false : root.appSettings.bottomPanelVisible
 
           onPluginClicked: function (plugin: Plugin) {
             PluginInspectorController.showInspector(plugin);
@@ -584,7 +593,29 @@ ApplicationWindow {
         SplitView.preferredWidth: 200
         pluginImporter: root.session.pluginImporter
         project: root.project
-        visible: root.compactMobileLayout ? root.mobileTrackControlsOpen : root.appSettings.rightPanelVisible
+        visible: !root.compactMobileLayout && root.appSettings.rightPanelVisible
+      }
+
+      // The actual selected-track inspector dock sits to the right on mobile.
+      Loader {
+        id: mobileTrackControlsDock
+        visible: root.compactMobileLayout && root.mobileTrackControlsOpen
+        active: visible
+        SplitView.fillHeight: true
+        SplitView.minimumWidth: visible ? 170 : 0
+        SplitView.preferredWidth: visible ? 210 : 0
+        sourceComponent: Component {
+          LeftDock {
+            deviceManager: root.deviceManager
+            pluginImporter: root.session.pluginImporter
+            pluginOperator: root.session.pluginOperator
+            project: root.project
+            session: root.session
+            trackSelectionModel: trackSelectionModel
+            tracklist: root.project.tracklist
+            undoStack: root.session.undoStack
+          }
+        }
       }
     }
 
