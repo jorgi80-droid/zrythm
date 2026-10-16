@@ -46,14 +46,12 @@ jobs:
 
       - name: Configure native Linux reference build
         run: |
-          cmake -S . -B build-mobile-check -G Ninja \
+          cmake -S . -B conanbuild/Release -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-
             -DZRYTHM_TESTS=OFF \
             -DZRYTHM_QML_TESTS=OFF \
             -DZRYTHM_BENCHMARKS=OFF \
             -DZRYTHM_MANPAGE=OFF \
             -DZRYTHM_SHELL_COMPLETIONS=OFF \
             -DZRYTHM_USER_MANUAL=OFF \
-            -DZRYTHM_STRICT=OFF \\
-            -DCMAKE_TOOLCHAIN_FILE=conanbuild-ci/build/Release/generators/conan_toolchain.cmake
+            -DZRYTHM_STRICT=OFF
