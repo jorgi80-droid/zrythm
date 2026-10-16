@@ -42,12 +42,11 @@ jobs:
           conan config install conan
           conan remote add conan-local-index ext/conan-center-index || true
           python3 tools/export_conan_recipes.py
-          conan install . -pr:h clang_release -pr:b clang_release --build=missing
+          conan install . -pr:h ci_clang_19 -pr:b ci_clang_19 --build=missing
 
       - name: Configure native Linux reference build
         run: |
-          cmake -S . -B conanbuild/Release -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
+          cmake --preset default \
             -DZRYTHM_TESTS=OFF \
             -DZRYTHM_QML_TESTS=OFF \
             -DZRYTHM_BENCHMARKS=OFF \
