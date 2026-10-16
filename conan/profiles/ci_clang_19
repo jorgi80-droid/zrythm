@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: © 2026 Jorgi Firmansyah
+# SPDX-License-Identifier: CC0-1.0
+# CI host profile for Ubuntu 24.04 with the supported Clang 19 toolchain.
+include(_common)
+include(_qt_common)
+
+[settings]
+os=Linux
+arch=x86_64
+build_type=Release
+compiler=clang
+compiler.version=19
+compiler.libcxx=libstdc++11
+compiler.cppstd=23
+
+[conf]
+tools.build:compiler_executables={"c": "/usr/bin/clang-19", "cpp": "/usr/bin/clang++-19"}
+tools.build:cflags+=["-DQT_NO_INT128", "-pipe"]
+tools.build:cxxflags+=["-DQT_NO_INT128", "-pipe"]
