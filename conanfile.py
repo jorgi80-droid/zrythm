@@ -36,7 +36,7 @@ class Zrythm(ConanFile):
     def requirements(self):
         self.requires("qt/[>=6.11.1]")
         self.requires("magic_enum/0.9.7")
-        self.requires("fmt/[~12]")
+        self.requires("fmt/12.2.0", override=True)
         self.requires("spdlog/[~1.17]")
         self.requires("scnlib/4.0.1")
         self.requires("boost/[>=1.89.0]")
