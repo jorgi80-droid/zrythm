@@ -25,7 +25,7 @@
 #include <QWidget>
 #include <QWindow>
 
-#if defined(Q_OS_LINUX)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
 #  include <cstdlib>
 
 #  include <QGuiApplication>
@@ -580,7 +580,7 @@ QtPluginHostWindow::contentScaleFactor () const
 std::optional<QSize>
 QtPluginHostWindow::attachNativeView (quintptr native_view)
 {
-#if defined(Q_OS_LINUX)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
   // X11 view handles only exist on xcb sessions; Wayland sessions host
   // plugins in X11PluginHostWindow
   if (native_view == 0 || !QGuiApplication::platformName ().startsWith (u"xcb"))
