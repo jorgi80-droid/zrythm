@@ -14,8 +14,6 @@ compiler.version=19
 compiler.libcxx=c++_shared
 compiler.cppstd=23
 
-[tool_requires]
-*: android-ndk/r28c
 
 [options]
 qt/*:opengl=no
