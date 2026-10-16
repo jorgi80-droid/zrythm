@@ -23,7 +23,7 @@
 #  include <sanitizer/lsan_interface.h>
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)
 
 #  include <algorithm>
 #  include <array>
