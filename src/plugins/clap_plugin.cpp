@@ -660,6 +660,9 @@ make_clap_window (plugins::WindowSystem window_system, WId window)
       w.api = CLAP_WINDOW_API_WIN32;
       w.win32 = reinterpret_cast<clap_hwnd> (window);
       break;
+    case plugins::WindowSystem::Unsupported:
+      w.api = nullptr;
+      break;
     }
 
   return w;
