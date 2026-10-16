@@ -473,7 +473,7 @@ ApplicationWindow {
     }
     TapHandler {
       onTapped: {
-        root.mobileWorkspaceOpen = true;
+        root.mobileWorkspaceOpen = !root.mobileWorkspaceOpen;
         root.mobileTrackControlsOpen = false;
         root.mobileLeftOverlayOpen = true;
         root.mobileRightOverlayOpen = false;
@@ -502,7 +502,7 @@ ApplicationWindow {
     }
     TapHandler {
       onTapped: {
-        root.mobileTrackControlsOpen = true;
+        root.mobileTrackControlsOpen = !root.mobileTrackControlsOpen;
         root.mobileWorkspaceOpen = false;
         root.mobileLeftOverlayOpen = false;
         root.mobileRightOverlayOpen = true;
