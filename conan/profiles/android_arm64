@@ -36,3 +36,4 @@ qt/*:qtcanvaspainter=True
 [conf]
 tools.cmake.cmaketoolchain:generator=Ninja
 tools.system.package_manager:mode=disabled
+user.zrythm:android_target=True
