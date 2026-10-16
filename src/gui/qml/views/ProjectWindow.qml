@@ -96,6 +96,7 @@ ApplicationWindow {
   visible: true
   width: compactMobileLayout ? Screen.width : 1280
   property bool mobileWorkspaceOpen: false
+  property bool mobileBrowserOpen: false
   property bool mobileTrackControlsOpen: false
 
   header: MainToolbar {
@@ -125,6 +126,10 @@ ApplicationWindow {
 
   Component.onCompleted: {
     console.log("ApplicationWindow created on platform", Qt.platform.os);
+    // Start mobile sessions with the Arrangement unobstructed. The existing
+    // toolbar toggle and workspace navigation can reopen the bottom editor.
+    if (compactMobileLayout)
+      appSettings.bottomPanelVisible = false;
     project.engine.activate();
   }
 
@@ -470,10 +475,11 @@ ApplicationWindow {
     }
     TapHandler {
       onTapped: {
-        root.mobileWorkspaceOpen = !root.mobileWorkspaceOpen;
+        const opening = !root.mobileWorkspaceOpen;
+        root.mobileWorkspaceOpen = opening;
         root.mobileTrackControlsOpen = false;
-        root.appSettings.leftPanelVisible = false;
-        root.appSettings.rightPanelVisible = true;
+        if (opening)
+          root.mobileBrowserOpen = false;
       }
     }
   }
@@ -499,9 +505,92 @@ ApplicationWindow {
       onTapped: {
         root.mobileTrackControlsOpen = !root.mobileTrackControlsOpen;
         root.mobileWorkspaceOpen = false;
-        root.appSettings.rightPanelVisible = false;
-        root.appSettings.leftPanelVisible = true;
+        root.mobileBrowserOpen = false;
       }
+    }
+  }
+
+  Component {
+    id: mobileWorkspaceNavigationComponent
+
+    Rectangle {
+      implicitWidth: 210
+      implicitHeight: 300
+      color: root.palette.window
+      border.color: root.palette.mid
+
+      ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 8
+        spacing: 6
+
+        Label {
+          text: qsTr("Workspace")
+          font.bold: true
+          Layout.fillWidth: true
+          Layout.preferredHeight: 34
+        }
+
+        ToolButton {
+          text: qsTr("Arrangement")
+          Layout.fillWidth: true
+          onClicked: {
+            centerDock.mobileWorkspaceIndex = 0;
+            root.appSettings.bottomPanelVisible = false;
+            root.mobileBrowserOpen = false;
+            root.mobileWorkspaceOpen = false;
+          }
+        }
+
+        ToolButton {
+          text: qsTr("Piano Roll / Editor")
+          Layout.fillWidth: true
+          onClicked: {
+            centerDock.mobileWorkspaceIndex = 0;
+            bottomDock.mobilePanelIndex = 0;
+            root.appSettings.bottomPanelVisible = true;
+            root.mobileBrowserOpen = false;
+            root.mobileWorkspaceOpen = false;
+          }
+        }
+
+        ToolButton {
+          text: qsTr("Mixer")
+          Layout.fillWidth: true
+          onClicked: {
+            bottomDock.mobilePanelIndex = 1;
+            root.appSettings.bottomPanelVisible = true;
+            root.mobileBrowserOpen = false;
+            root.mobileWorkspaceOpen = false;
+          }
+        }
+
+        ToolButton {
+          text: qsTr("Browser")
+          Layout.fillWidth: true
+          onClicked: root.mobileBrowserOpen = true
+        }
+
+        ToolButton {
+          text: qsTr("Automation · Arrangement")
+          Layout.fillWidth: true
+          onClicked: {
+            centerDock.mobileWorkspaceIndex = 0;
+            root.appSettings.bottomPanelVisible = false;
+            root.mobileBrowserOpen = false;
+            root.mobileWorkspaceOpen = false;
+          }
+        }
+      }
+    }
+  }
+
+  Component {
+    id: mobileBrowserDockComponent
+
+    RightDock {
+      pluginImporter: root.session.pluginImporter
+      project: root.project
     }
   }
 
@@ -541,12 +630,9 @@ ApplicationWindow {
         SplitView.fillHeight: true
         SplitView.minimumWidth: visible ? 170 : 0
         SplitView.preferredWidth: visible ? 210 : 0
-        sourceComponent: Component {
-          RightDock {
-            pluginImporter: root.session.pluginImporter
-            project: root.project
-          }
-        }
+        sourceComponent: root.mobileBrowserOpen
+          ? mobileBrowserDockComponent
+          : mobileWorkspaceNavigationComponent
       }
 
       SplitView {
@@ -577,7 +663,7 @@ ApplicationWindow {
           chordPresetManager: root.chordPresetManager
           session: root.session
           trackSelectionModel: trackSelectionModel
-          visible: root.compactMobileLayout ? false : root.appSettings.bottomPanelVisible
+          visible: root.appSettings.bottomPanelVisible
 
           onPluginClicked: function (plugin: Plugin) {
             PluginInspectorController.showInspector(plugin);
