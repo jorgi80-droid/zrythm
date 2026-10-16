@@ -87,10 +87,17 @@ ApplicationWindow {
     root.project.engine.deactivate();
   }
 
-  height: 720
+  // Android-friendly sizing: let the device determine the initial canvas size.
+  // Keep desktop defaults while allowing compact phone layouts to expand fullscreen.
+  height: Math.max(480, Screen.height * 0.92)
   title: session.title
   visible: true
-  width: 1280
+  width: Math.max(800, Screen.width * 0.96)
+
+  // Mobile mode adapts Zrythm's actual QML workspace rather than redrawing it.
+  readonly property bool compactMobileLayout: Screen.width < 900 || Screen.height < 600
+  property bool mobileWorkspaceOpen: false
+  property bool mobileTrackControlsOpen: false
 
   header: MainToolbar {
     id: headerBar
