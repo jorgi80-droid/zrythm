@@ -531,7 +531,7 @@ ApplicationWindow {
         trackSelectionModel: trackSelectionModel
         tracklist: root.project.tracklist
         undoStack: root.session.undoStack
-        visible: root.appSettings.leftPanelVisible
+        visible: root.compactMobileLayout ? root.mobileWorkspaceOpen : root.appSettings.leftPanelVisible
       }
 
       SplitView {
@@ -578,7 +578,7 @@ ApplicationWindow {
         SplitView.preferredWidth: 200
         pluginImporter: root.session.pluginImporter
         project: root.project
-        visible: root.appSettings.rightPanelVisible
+        visible: root.compactMobileLayout ? root.mobileTrackControlsOpen : root.appSettings.rightPanelVisible
       }
     }
 
