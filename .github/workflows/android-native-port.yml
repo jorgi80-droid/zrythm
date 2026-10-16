@@ -2,16 +2,6 @@ name: Zrythm native Android port feasibility build
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - android-native-port
-    paths:
-      - 'CMakeLists.txt'
-      - 'conanfile.py'
-      - 'conan/profiles/**'
-      - 'src/**'
-      - 'data/platform/android/**'
-      - '.github/workflows/android-native-port.yml'
 
 permissions:
   contents: read
