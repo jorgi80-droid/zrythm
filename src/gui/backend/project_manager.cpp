@@ -159,6 +159,11 @@ ProjectManager::create_window_for_plugin (plugins::Plugin &plugin) const
         : QObject::tr ("<no track>"),
       plugin.get_node_name (),
       plugin.configuration ()->descriptor ()->format ()));
+  // Android currently has no native CLAP/VST3 window-embedding backend.
+  // Keep plugin DSP available and let plugin code fall back to generic UI.
+#if defined(Q_OS_ANDROID)
+  return nullptr;
+#else
   // Plugin editors need X11 windows. Under Wayland sessions Qt would create
   // Wayland surfaces, so use a raw X11 window (via XWayland); everywhere else
   // Qt's platform matches the plugin windowing system (xcb, Win32, Cocoa)
@@ -180,6 +185,7 @@ ProjectManager::create_window_for_plugin (plugins::Plugin &plugin) const
     }
   ret->setTitle (title.to_qstring ());
   return ret;
+#endif
 }
 
 namespace
