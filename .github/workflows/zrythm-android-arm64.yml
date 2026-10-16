@@ -6,6 +6,8 @@ on:
     branches:
       - android-native-port
     paths:
+      - 'conanfile.py'
+      - 'conan/profiles/android_arm64'
       - '.github/workflows/zrythm-android-arm64.yml'
 
 permissions:
