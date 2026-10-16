@@ -85,7 +85,7 @@ class Zrythm(ConanFile):
         self.options["qt"].with_sqlite3 = False
         self.options["qt"].with_pq = False
         self.options["qt"].with_odbc = False
-        self.options["qt"].opengl = "desktop"
+        self.options["qt"].opengl = "es2" if self.settings.os == "Android" else "desktop"
 
         # Modules enabled in manual builds
         self.options["qt"].qtdeclarative = True
@@ -142,6 +142,21 @@ class Zrythm(ConanFile):
             # Enables the offscreen QPA plugin for headless QML tests
             self.options["qt"].with_freetype = True
             self.options["qt"].qtwayland = False
+        elif self.settings.os == "Android":
+            # Android uses EGL/OpenGL ES and the NDK, not X11/Wayland/fontconfig.
+            # Keep Qt Quick's essential font rendering, but omit desktop window backends.
+            self.options["qt"].with_dbus = False
+            self.options["qt"].with_fontconfig = False
+            self.options["qt"].with_freetype = True
+            self.options["qt"].with_egl = True
+            self.options["qt"].with_x11 = False
+            self.options["qt"].qtwayland = False
+            self.options["qt"].with_icu = False
+            self.options["qt"].with_libjpeg = False
+            self.options["qt"].with_pq = False
+            self.options["qt"].with_odbc = False
+            self.options["qt"].with_sqlite3 = False
+            self.options["qt"].with_glib = False
 
         self.options["boost"].header_only = True
 
