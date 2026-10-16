@@ -26,17 +26,27 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK command line tools
+      # The setup action's default package list includes the removed "tools"
+      # package, so skip its implicit sdkmanager install step.
+      - name: Install Android command-line tools
         uses: android-actions/setup-android@v3
-        env:
-          SKIP_SDKMANAGER: 'true'
+        with:
+          cmdline-tools-version: 'latest'
+          packages: ''
+          accept-android-sdk-licenses: true
 
       - name: Install Android platform and build tools
         shell: bash
         run: |
           set -euo pipefail
-          SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/16.0/bin/sdkmanager
-          test -x "$SDKMANAGER"
+          echo "SDK root: $ANDROID_HOME"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager -print | sort -V | tail -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager executable not found under $ANDROID_HOME/cmdline-tools"
+            find "$ANDROID_HOME" -maxdepth 5 -print || true
+            exit 1
+          fi
+          echo "Using $SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" --install "platform-tools"
           "$SDKMANAGER" --install "platforms;android-35"
@@ -46,8 +56,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -d /usr/local/lib/android/sdk/platforms/android-35
-          test -d /usr/local/lib/android/sdk/build-tools/35.0.0
+          test -d "$ANDROID_HOME/platforms/android-35"
+          test -d "$ANDROID_HOME/build-tools/35.0.0"
           echo "Android SDK packages verified"
 
       - name: Set up Gradle
