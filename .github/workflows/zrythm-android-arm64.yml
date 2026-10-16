@@ -6,11 +6,6 @@ on:
     branches:
       - android-native-port
     paths:
-      - 'CMakeLists.txt'
-      - 'conanfile.py'
-      - 'conan/**'
-      - 'src/**'
-      - 'data/platform/android/**'
       - '.github/workflows/zrythm-android-arm64.yml'
 
 permissions:
@@ -89,6 +84,8 @@ jobs:
             -pr:h android_arm64 \
             -pr:b ci_clang_19 \
             -o "qt/*:android_sdk=$ANDROID_SDK_ROOT" \
+            -c "tools.android:ndk_path=$ANDROID_NDK_HOME" \
+            --lockfile="" \
             --build=missing
 
       - name: Configure native Qt/QML app for Android
