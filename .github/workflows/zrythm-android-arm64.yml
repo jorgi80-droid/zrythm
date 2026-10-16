@@ -106,7 +106,9 @@ jobs:
             -DZRYTHM_MANPAGE=OFF \
             -DZRYTHM_SHELL_COMPLETIONS=OFF \
             -DZRYTHM_USER_MANUAL=OFF \
-            -DZRYTHM_STRICT=OFF
+            -DZRYTHM_STRICT=OFF \
+            -DZRYTHM_CHECK_UPDATES=OFF \
+            -DQT_ANDROID_DEPLOYMENT_TYPE=Debug
 
       - name: Build native APK
         shell: bash
