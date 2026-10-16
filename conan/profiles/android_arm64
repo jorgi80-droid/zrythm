@@ -18,7 +18,7 @@ compiler.cppstd=23
 *: android-ndk/r28c
 
 [options]
-qt/*:opengl=es2
+qt/*:opengl=no
 qt/*:with_dbus=False
 qt/*:with_fontconfig=False
 qt/*:with_freetype=True
