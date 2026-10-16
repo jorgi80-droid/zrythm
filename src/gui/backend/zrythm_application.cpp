@@ -195,7 +195,7 @@ ZrythmApplication::initialize ()
   impl_->juce_message_handler_initializer_ =
     std::make_unique<juce::ScopedJuceInitialiser_GUI> ();
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)
   // Dispatch JUCE events (JUCE messages and X11 events for JUCE-created
   // windows) inside Qt's event loop
   impl_->juce_event_loop_bridge_ =
