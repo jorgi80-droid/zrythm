@@ -40,6 +40,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install conan
           conan profile detect --force
+          conan install . -pr:h default -pr:b default --build=missing -of conanbuild-ci
 
       - name: Configure native Linux reference build
         run: |
@@ -53,4 +54,5 @@ jobs:
             -DZRYTHM_MANPAGE=OFF \
             -DZRYTHM_SHELL_COMPLETIONS=OFF \
             -DZRYTHM_USER_MANUAL=OFF \
-            -DZRYTHM_STRICT=OFF
+            -DZRYTHM_STRICT=OFF \\
+            -DCMAKE_TOOLCHAIN_FILE=conanbuild-ci/build/Release/generators/conan_toolchain.cmake
