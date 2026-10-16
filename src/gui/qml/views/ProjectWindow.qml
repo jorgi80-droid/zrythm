@@ -457,7 +457,7 @@ ApplicationWindow {
   Rectangle {
     id: mobileWorkspaceHandle
     z: 20
-    visible: root.compactMobileLayout && !root.mobileWorkspaceOpen
+    visible: root.compactMobileLayout
     width: 34
     height: 48
     radius: 8
@@ -467,7 +467,7 @@ ApplicationWindow {
     anchors.verticalCenter: parent.verticalCenter
     Text {
       anchors.centerIn: parent
-      text: "☷"
+      text: root.mobileWorkspaceOpen ? "‹" : "☷"
       color: root.palette.highlight
       font.pixelSize: 20
     }
@@ -486,7 +486,7 @@ ApplicationWindow {
   Rectangle {
     id: mobileTrackControlsHandle
     z: 20
-    visible: root.compactMobileLayout && !root.mobileTrackControlsOpen
+    visible: root.compactMobileLayout
     width: 34
     height: 48
     radius: 8
@@ -496,7 +496,7 @@ ApplicationWindow {
     anchors.verticalCenter: parent.verticalCenter
     Text {
       anchors.centerIn: parent
-      text: "☰"
+      text: root.mobileTrackControlsOpen ? "›" : "☰"
       color: root.palette.highlight
       font.pixelSize: 20
     }
