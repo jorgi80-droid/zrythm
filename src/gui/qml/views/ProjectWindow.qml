@@ -451,6 +451,57 @@ ApplicationWindow {
     }
   }
 
+  // Edge-accessible mobile panel buttons. These are overlaid above the real workspace.
+  Rectangle {
+    id: mobileWorkspaceHandle
+    z: 20
+    visible: root.compactMobileLayout && !root.mobileWorkspaceOpen
+    width: 34
+    height: 48
+    radius: 8
+    color: root.palette.mid
+    border.color: root.palette.highlight
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    Text {
+      anchors.centerIn: parent
+      text: "☷"
+      color: root.palette.highlight
+      font.pixelSize: 20
+    }
+    TapHandler {
+      onTapped: {
+        root.mobileWorkspaceOpen = true;
+        root.appSettings.leftPanelVisible = true;
+      }
+    }
+  }
+
+  Rectangle {
+    id: mobileTrackControlsHandle
+    z: 20
+    visible: root.compactMobileLayout && !root.mobileTrackControlsOpen
+    width: 34
+    height: 48
+    radius: 8
+    color: root.palette.mid
+    border.color: root.palette.highlight
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    Text {
+      anchors.centerIn: parent
+      text: "☰"
+      color: root.palette.highlight
+      font.pixelSize: 20
+    }
+    TapHandler {
+      onTapped: {
+        root.mobileTrackControlsOpen = true;
+        root.appSettings.rightPanelVisible = true;
+      }
+    }
+  }
+
   ColumnLayout {
     anchors.fill: parent
     spacing: 0
