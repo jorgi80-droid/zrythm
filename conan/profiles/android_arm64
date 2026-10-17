@@ -14,7 +14,6 @@ compiler.version=19
 compiler.libcxx=c++_shared
 compiler.cppstd=23
 
-
 [options]
 qt/*:opengl=no
 qt/*:with_dbus=False
@@ -30,6 +29,10 @@ qt/*:with_odbc=False
 qt/*:with_sqlite3=False
 qt/*:with_glib=False
 qt/*:qtcanvaspainter=True
+# oneTBB's allocator exports a Linux-specific version script that fails under Android LLD.
+# Keep the core TBB runtime, but omit optional malloc replacement libraries.
+onetbb/*:tbbmalloc=False
+onetbb/*:tbbbind=False
 
 # Android cross-build must never install host desktop packages through Conan.
 # The runner provisions its host dependencies explicitly in the workflow.
