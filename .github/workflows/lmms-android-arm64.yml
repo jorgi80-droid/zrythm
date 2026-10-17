@@ -1,0 +1,116 @@
+name: LMMS Android ARM64
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [lmms-android-port]
+    paths:
+      - ".github/workflows/lmms-android-arm64.yml"
+      - "android-port/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    steps:
+      - name: Checkout port configuration
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build cmake pkg-config autoconf automake libtool             build-essential git curl zip unzip tar python3 python3-pip perl nasm
+
+      - name: Install Android SDK and NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK 26.1
+        run: sdkmanager "platform-tools" "platforms;android-35" "ndk;26.1.10909125"
+
+      - name: Install Qt 6.7 for Android ARM64
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.7.3"
+          target: android
+          arch: android_arm64_v8a
+          modules: "qtdeclarative qtshadertools qtquickcontrols2"
+          cache: true
+
+      - name: Checkout LMMS Android QML prototype
+        uses: actions/checkout@v4
+        with:
+          repository: jsmtux/lmms
+          ref: qt_6_qml_android_poc
+          path: lmms-src
+          submodules: recursive
+
+      - name: Build Android dependencies with vcpkg
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+          ./vcpkg/vcpkg install fftw3:arm64-android libsamplerate:arm64-android libsndfile:arm64-android
+          mkdir -p "$RUNNER_TEMP/android-libs"/{fftw,libsamplerate,libsndfile}/{include,lib}
+          VCPKG="$GITHUB_WORKSPACE/vcpkg/installed/arm64-android"
+          cp -a "$VCPKG/include/." "$RUNNER_TEMP/android-libs/libsndfile/include/"
+          cp -a "$VCPKG/lib/libsndfile.a" "$RUNNER_TEMP/android-libs/libsndfile/lib/" 2>/dev/null || true
+          cp -a "$VCPKG/lib/libsamplerate.a" "$RUNNER_TEMP/android-libs/libsamplerate/lib/" 2>/dev/null || true
+          cp -a "$VCPKG/lib/libfftw3f.a" "$RUNNER_TEMP/android-libs/fftw/lib/" 2>/dev/null || true
+          cp -a "$VCPKG/include/sndfile.h" "$RUNNER_TEMP/android-libs/libsndfile/include/" 2>/dev/null || true
+          cp -a "$VCPKG/include/samplerate.h" "$RUNNER_TEMP/android-libs/libsamplerate/include/" 2>/dev/null || true
+          cp -a "$VCPKG/include/fftw3.h" "$RUNNER_TEMP/android-libs/fftw/include/" 2>/dev/null || true
+          test -f "$RUNNER_TEMP/android-libs/libsndfile/lib/libsndfile.a"
+          test -f "$RUNNER_TEMP/android-libs/libsamplerate/lib/libsamplerate.a"
+          test -f "$RUNNER_TEMP/android-libs/fftw/lib/libfftw3f.a"
+          echo "ANDROID_LIBS_DIR=$RUNNER_TEMP/android-libs" >> "$GITHUB_ENV"
+
+      - name: Patch prototype for hosted runner
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("lmms-src/CMakeLists.txt")
+          s = p.read_text()
+          s = s.replace(
+              "set(ANDROID_NDK /home/jsmtux/Coding/Android/Sdk/ndk/26.1.10909125/)",
+              'set(ANDROID_NDK "$ENV{ANDROID_NDK_ROOT}")'
+          )
+          p.write_text(s)
+          PY
+
+      - name: Configure LMMS Android ARM64
+        run: |
+          cmake -S lmms-src -B build-android -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=27 \
+            -DANDROID_STL=c++_shared \
+            -DLMMS_BUILD_ANDROID=ON \
+            -DWANT_AAUDIO=ON \
+            -DWANT_ALSA=OFF -DWANT_JACK=OFF -DWANT_LV2=OFF -DWANT_SUIL=OFF \
+            -DWANT_MP3LAME=OFF -DWANT_OGGVORBIS=OFF -DWANT_PULSEAUDIO=OFF \
+            -DWANT_PORTAUDIO=OFF -DWANT_SNDIO=OFF -DWANT_SOUNDIO=OFF -DWANT_SDL=OFF \
+            -DWANT_SF2=OFF -DWANT_GIG=OFF -DWANT_STK=OFF -DWANT_SWH=OFF \
+            -DWANT_TAP=OFF -DWANT_CMT=OFF -DWANT_CAPS=OFF -DWANT_CALF=OFF \
+            -DWANT_CARLA=OFF -DWANT_VST=OFF -DWANT_WINMM=OFF \
+            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+
+      - name: Build APK
+        run: cmake --build build-android --target lmms2example --parallel 2
+
+      - name: Locate and upload APK
+        run: |
+          find build-android -type f -name "*.apk" -print
+          mkdir -p output
+          find build-android -type f -name "*.apk" -exec cp {} output/ \;
+          test -n "$(find output -type f -name '*.apk' -print -quit)"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LMMS-Android-ARM64
+          path: output/*.apk
+          if-no-files-found: error
+          retention-days: 14
