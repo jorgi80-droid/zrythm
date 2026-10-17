@@ -14,6 +14,8 @@ ColumnLayout {
 
   required property ChordPresetManager chordPresetManager
   readonly property Project project: session.project
+  // Publicly expose the existing Editor/Mixer/Chord Pad selector on mobile.
+  property alias mobilePanelIndex: centerTabBar.currentIndex
   required property ProjectSession session
   required property TrackSelectionModel trackSelectionModel
 

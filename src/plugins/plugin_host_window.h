@@ -29,6 +29,7 @@ enum class WindowSystem
   Wayland,
   Win32,
   Cocoa,
+  Unsupported,
 };
 
 /**
@@ -77,14 +78,16 @@ public:
    */
   static constexpr WindowSystem currentWindowSystem ()
   {
-#if defined(Q_OS_LINUX)
+#if defined(Q_OS_ANDROID)
+    return WindowSystem::Unsupported;
+#elif defined(Q_OS_LINUX)
     return WindowSystem::X11;
 #elif defined(Q_OS_MACOS)
     return WindowSystem::Cocoa;
 #elif defined(Q_OS_WIN)
     return WindowSystem::Win32;
 #else
-#  error "unsupported platform"
+  return WindowSystem::Unsupported;
 #endif
   }
 

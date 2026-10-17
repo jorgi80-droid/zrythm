@@ -87,10 +87,17 @@ ApplicationWindow {
     root.project.engine.deactivate();
   }
 
-  height: 720
+  // Android-friendly sizing: let the device determine the initial canvas size.
+  // Keep desktop defaults while allowing compact phone layouts to expand fullscreen.
+  // Mobile uses the available screen; desktop keeps Zrythm's normal starting size.
+  readonly property bool compactMobileLayout: Screen.width < 900 || Screen.height < 600
+  height: compactMobileLayout ? Screen.height : 720
   title: session.title
   visible: true
-  width: 1280
+  width: compactMobileLayout ? Screen.width : 1280
+  property bool mobileWorkspaceOpen: false
+  property bool mobileBrowserOpen: false
+  property bool mobileTrackControlsOpen: false
 
   header: MainToolbar {
     id: headerBar
@@ -119,6 +126,10 @@ ApplicationWindow {
 
   Component.onCompleted: {
     console.log("ApplicationWindow created on platform", Qt.platform.os);
+    // Start mobile sessions with the Arrangement unobstructed. The existing
+    // toolbar toggle and workspace navigation can reopen the bottom editor.
+    if (compactMobileLayout)
+      appSettings.bottomPanelVisible = false;
     project.engine.activate();
   }
 
@@ -444,6 +455,145 @@ ApplicationWindow {
     }
   }
 
+  // Edge-accessible mobile panel buttons. These are overlaid above the real workspace.
+  Rectangle {
+    id: mobileWorkspaceHandle
+    z: 20
+    visible: root.compactMobileLayout
+    width: 34
+    height: 48
+    radius: 8
+    color: root.palette.mid
+    border.color: root.palette.highlight
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    Text {
+      anchors.centerIn: parent
+      text: root.mobileWorkspaceOpen ? "‹" : "☷"
+      color: root.palette.highlight
+      font.pixelSize: 20
+    }
+    TapHandler {
+      onTapped: {
+        const opening = !root.mobileWorkspaceOpen;
+        root.mobileWorkspaceOpen = opening;
+        root.mobileTrackControlsOpen = false;
+        if (opening)
+          root.mobileBrowserOpen = false;
+      }
+    }
+  }
+
+  Rectangle {
+    id: mobileTrackControlsHandle
+    z: 20
+    visible: root.compactMobileLayout
+    width: 34
+    height: 48
+    radius: 8
+    color: root.palette.mid
+    border.color: root.palette.highlight
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    Text {
+      anchors.centerIn: parent
+      text: root.mobileTrackControlsOpen ? "›" : "☰"
+      color: root.palette.highlight
+      font.pixelSize: 20
+    }
+    TapHandler {
+      onTapped: {
+        root.mobileTrackControlsOpen = !root.mobileTrackControlsOpen;
+        root.mobileWorkspaceOpen = false;
+        root.mobileBrowserOpen = false;
+      }
+    }
+  }
+
+  Component {
+    id: mobileWorkspaceNavigationComponent
+
+    Rectangle {
+      implicitWidth: 210
+      implicitHeight: 300
+      color: root.palette.window
+      border.color: root.palette.mid
+
+      ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: 8
+        spacing: 6
+
+        Label {
+          text: qsTr("Workspace")
+          font.bold: true
+          Layout.fillWidth: true
+          Layout.preferredHeight: 34
+        }
+
+        ToolButton {
+          text: qsTr("Arrangement")
+          Layout.fillWidth: true
+          onClicked: {
+            centerDock.mobileWorkspaceIndex = 0;
+            root.appSettings.bottomPanelVisible = false;
+            root.mobileBrowserOpen = false;
+            root.mobileWorkspaceOpen = false;
+          }
+        }
+
+        ToolButton {
+          text: qsTr("Piano Roll / Editor")
+          Layout.fillWidth: true
+          onClicked: {
+            centerDock.mobileWorkspaceIndex = 0;
+            bottomDock.mobilePanelIndex = 0;
+            root.appSettings.bottomPanelVisible = true;
+            root.mobileBrowserOpen = false;
+            root.mobileWorkspaceOpen = false;
+          }
+        }
+
+        ToolButton {
+          text: qsTr("Mixer")
+          Layout.fillWidth: true
+          onClicked: {
+            bottomDock.mobilePanelIndex = 1;
+            root.appSettings.bottomPanelVisible = true;
+            root.mobileBrowserOpen = false;
+            root.mobileWorkspaceOpen = false;
+          }
+        }
+
+        ToolButton {
+          text: qsTr("Browser")
+          Layout.fillWidth: true
+          onClicked: root.mobileBrowserOpen = true
+        }
+
+        ToolButton {
+          text: qsTr("Automation · Arrangement")
+          Layout.fillWidth: true
+          onClicked: {
+            centerDock.mobileWorkspaceIndex = 0;
+            root.appSettings.bottomPanelVisible = false;
+            root.mobileBrowserOpen = false;
+            root.mobileWorkspaceOpen = false;
+          }
+        }
+      }
+    }
+  }
+
+  Component {
+    id: mobileBrowserDockComponent
+
+    RightDock {
+      pluginImporter: root.session.pluginImporter
+      project: root.project
+    }
+  }
+
   ColumnLayout {
     anchors.fill: parent
     spacing: 0
@@ -469,7 +619,20 @@ ApplicationWindow {
         trackSelectionModel: trackSelectionModel
         tracklist: root.project.tracklist
         undoStack: root.session.undoStack
-        visible: root.appSettings.leftPanelVisible
+        visible: !root.compactMobileLayout && root.appSettings.leftPanelVisible
+      }
+
+      // The actual Zrythm browser dock sits to the left on mobile.
+      Loader {
+        id: mobileWorkspaceDock
+        visible: root.compactMobileLayout && root.mobileWorkspaceOpen
+        active: visible
+        SplitView.fillHeight: true
+        SplitView.minimumWidth: visible ? 170 : 0
+        SplitView.preferredWidth: visible ? 210 : 0
+        sourceComponent: root.mobileBrowserOpen
+          ? mobileBrowserDockComponent
+          : mobileWorkspaceNavigationComponent
       }
 
       SplitView {
@@ -516,7 +679,29 @@ ApplicationWindow {
         SplitView.preferredWidth: 200
         pluginImporter: root.session.pluginImporter
         project: root.project
-        visible: root.appSettings.rightPanelVisible
+        visible: !root.compactMobileLayout && root.appSettings.rightPanelVisible
+      }
+
+      // The actual selected-track inspector dock sits to the right on mobile.
+      Loader {
+        id: mobileTrackControlsDock
+        visible: root.compactMobileLayout && root.mobileTrackControlsOpen
+        active: visible
+        SplitView.fillHeight: true
+        SplitView.minimumWidth: visible ? 170 : 0
+        SplitView.preferredWidth: visible ? 210 : 0
+        sourceComponent: Component {
+          LeftDock {
+            deviceManager: root.deviceManager
+            pluginImporter: root.session.pluginImporter
+            pluginOperator: root.session.pluginOperator
+            project: root.project
+            session: root.session
+            trackSelectionModel: trackSelectionModel
+            tracklist: root.project.tracklist
+            undoStack: root.session.undoStack
+          }
+        }
       }
     }
 

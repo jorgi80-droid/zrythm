@@ -1048,6 +1048,8 @@ Vst3Plugin::show_editor ()
         return kPlatformTypeNSView;
       case plugins::WindowSystem::Win32:
         return kPlatformTypeHWND;
+      case plugins::WindowSystem::Unsupported:
+        return nullptr;
       }
     std::unreachable ();
   }(pimpl_->editor_window_->windowSystem ());

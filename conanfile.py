@@ -36,11 +36,11 @@ class Zrythm(ConanFile):
     def requirements(self):
         self.requires("qt/[>=6.11.1]")
         self.requires("magic_enum/0.9.7")
-        self.requires("fmt/[~12]")
+        self.requires("fmt/12.2.0", override=True)
         self.requires("spdlog/[~1.17]")
         self.requires("scnlib/4.0.1")
         self.requires("boost/[>=1.89.0]")
-        self.requires("nlohmann_json/3.12.1")
+        self.requires("nlohmann_json/3.12.1", override=True)
         self.requires("json-schema-validator/2.4.0")
         self.requires("libsndfile/1.2.2")
         self.requires("zstd/[~1.5]")
@@ -85,7 +85,7 @@ class Zrythm(ConanFile):
         self.options["qt"].with_sqlite3 = False
         self.options["qt"].with_pq = False
         self.options["qt"].with_odbc = False
-        self.options["qt"].opengl = "desktop"
+        self.options["qt"].opengl = "no" if self.settings.os == "Android" else "desktop"
 
         # Modules enabled in manual builds
         self.options["qt"].qtdeclarative = True
@@ -142,6 +142,21 @@ class Zrythm(ConanFile):
             # Enables the offscreen QPA plugin for headless QML tests
             self.options["qt"].with_freetype = True
             self.options["qt"].qtwayland = False
+        elif self.settings.os == "Android":
+            # Android uses EGL/OpenGL ES and the NDK, not X11/Wayland/fontconfig.
+            # Keep Qt Quick's essential font rendering, but omit desktop window backends.
+            self.options["qt"].with_dbus = False
+            self.options["qt"].with_fontconfig = False
+            self.options["qt"].with_freetype = True
+            self.options["qt"].with_egl = True
+            self.options["qt"].with_x11 = False
+            self.options["qt"].qtwayland = False
+            self.options["qt"].with_icu = False
+            self.options["qt"].with_libjpeg = False
+            self.options["qt"].with_pq = False
+            self.options["qt"].with_odbc = False
+            self.options["qt"].with_sqlite3 = False
+            self.options["qt"].with_glib = False
 
         self.options["boost"].header_only = True
 

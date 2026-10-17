@@ -3,7 +3,7 @@
 
 #include "gui/backend/juce_event_loop_bridge.h"
 
-#ifdef __linux__
+#if defined(__linux__) && !defined(__ANDROID__)
 
 #  include <algorithm>
 #  include <map>

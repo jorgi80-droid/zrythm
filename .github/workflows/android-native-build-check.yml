@@ -1,0 +1,36 @@
+name: Android native port build check
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - android-native-port
+    paths:
+      - 'src/gui/qml/**'
+      - 'src/gui/qml/views/ProjectWindow.qml'
+      - '.github/workflows/android-native-build-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  source-sanity:
+    name: Validate native QML changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Zrythm source
+        uses: actions/checkout@v4
+
+      - name: Inspect QML source for expected native workspace integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE=src/gui/qml/views/ProjectWindow.qml
+          test -s "$FILE"
+          grep -q 'LeftDock {' "$FILE"
+          grep -q 'RightDock {' "$FILE"
+          grep -q 'mobileWorkspaceHandle' "$FILE"
+          grep -q 'mobileTrackControlsHandle' "$FILE"
+          grep -q 'compactMobileLayout' "$FILE"
+          echo "Native Zrythm QML mobile workspace hooks found."
+          echo "This workflow is a source sanity check, not a full Android/Qt build."

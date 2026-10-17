@@ -19,6 +19,8 @@ ColumnLayout {
   required property PlaybackCacheActivityAggregator cacheActivityAggregator
   required property FileDialog importFileDialog
   readonly property Project project: session.project
+  // Publicly expose the real workspace tab selector for the mobile navigation panel.
+  property alias mobileWorkspaceIndex: centerTabBar.currentIndex
   readonly property int rulerHeight: 24
   required property ProjectSession session
   readonly property int tempoMapLaneHeight: 24
