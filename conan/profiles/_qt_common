@@ -6,6 +6,12 @@
 # (the build-context Qt used for tools during cross-building) get their options
 # from the build profile. These must match conanfile.py's Qt options.
 [options]
+# The build-context Qt only supplies host tools during Android cross-compilation.
+# Do not build desktop X11/Wayland backends or pull xorg/system into the graph.
+qt/*:with_x11=False
+qt/*:qtwayland=False
+qt/*:with_dbus=False
+qt/*:with_fontconfig=False
 qt/*:qtdeclarative=True
 qt/*:qtquickcontrols2=True
 qt/*:qttools=True
